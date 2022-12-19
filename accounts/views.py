@@ -4,7 +4,6 @@ from .serializer import UserSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import login
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password, check_password
@@ -12,13 +11,13 @@ from django.contrib.auth.hashers import make_password, check_password
 
 class LoginView(APIView):
     auth_data=''
-    def SaveAthToken(self,auth_data,user12):
-        auth_table=AuthTokens.objects.filter(user_id=user12.id).first()
+    def SaveAthToken(self,auth_data,user):
+        auth_table=AuthTokens.objects.filter(user_id=user.id).first()
         auth=auth_data.get('access')
         if auth_table is None:
             authtoken=AuthTokens()
             authtoken.token=auth
-            authtoken.user_id=user12
+            authtoken.user_id=user
             save=authtoken.save()
             return True
         auth_table.token=auth
@@ -31,18 +30,17 @@ class LoginView(APIView):
             return Response({'msg': 'Credentials missing'}, status=status.HTTP_400_BAD_REQUEST)
         email = request.data.get('email')
         password = request.data.get('password')
-        user12= User.objects.filter(email=email).first()
-        if not user12:
+        user= User.objects.filter(email=email).first()
+        if not user:
             return Response({"status": "success", "data": "user not found"}, status=status.HTTP_200_OK)
-        if(check_password(password,user12.password)):
-            if user12 is not None:
-                login(request, user12)
+        if(check_password(password,user.password)):
+            if user is not None:
+                login(request, user)
                 auth_data = get_tokens_for_user(request.user)
-                if(self.SaveAthToken(auth_data,user12)):
-                    return Response({'msg': 'Login Success','user':{"email":user12.email,"firstname":user12.firstname,"lastname":user12.lastname,"id":user12.id}}, status=status.HTTP_200_OK,headers={
-            'Cache-control': 'no-store, max-age=0',
-            'token':auth_data['access'],
-            'X-Frame-Options': 'DENY'})
+                if(self.SaveAthToken(auth_data,user)):
+                    return Response({'msg': 'Login Success','user':{"email":user.email,"firstname":user.firstname,"lastname":user.lastname,"id":user.id}}, status=status.HTTP_200_OK,headers={
+                        'token':auth_data['access']
+            })
         return Response({'msg': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 def get_tokens_for_user(user):
@@ -51,23 +49,15 @@ def get_tokens_for_user(user):
     return {
         'access': str(refresh.access_token),
     }    
-    
-    
-class TestCaseForLogin(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self,request):
-        
-        return Response({'msg': 'Login Success'}, status=status.HTTP_200_OK)
-
 
 class SignupClass(APIView):
 
     def post(self,request):
         request.data['password']=make_password(request.data.get('password'))
-        slz=UserSerializer(data=request.data)
-        if slz.is_valid():
-            slz.save()
-            return Response(slz.data,status=status.HTTP_201_CREATED)
+        serializer=UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response("2 emails cant be same",status=status.HTTP_406_NOT_ACCEPTABLE)
 
 class ForgotPassword(APIView):
@@ -84,9 +74,7 @@ class ForgotPassword(APIView):
             return Response("not found",status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({"id":str(token.user_id_id)},status=status.HTTP_201_CREATED,headers={
-            'Cache-control': 'no-store, max-age=0',
-            'token':str(token.token),
-            'X-Frame-Options': 'DENY'
+            'token':str(token.token)
         })
         
 class NewPassword(APIView):
