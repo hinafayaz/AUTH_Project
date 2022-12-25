@@ -7,6 +7,17 @@ from rest_framework.views import APIView
 from django.contrib.auth import login
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password, check_password
+from django.shortcuts import render
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
+from Eemail.models import Message
+from django.conf import settings
+
+
+
+
+
+
 
 
 class LoginView(APIView):
@@ -90,3 +101,6 @@ class NewPassword(APIView):
         red.password=make_password(request.data.get('password'))
         red.save()
         return Response("password successfully changed",status=status.HTTP_202_ACCEPTED)
+
+
+

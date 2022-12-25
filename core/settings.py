@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from os import getenv
+from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,8 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
+    'Eemail',
+    'graphene_django',
     'rest_framework',
     'rest_framework.authtoken',
+
 ]
 
 MIDDLEWARE = [
@@ -138,3 +144,41 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+SECRET_KEY = 'django-insecure-$q(l(&o=d%=7t(l(fsvh5t#!3c3(+#_1)(g#pl!$6vx0oz=kzg'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG=getenv("IS_DEVLOPMENT",True)
+
+ALLOWED_HOSTS=[getenv("APP_HOST", "127.0.0.1")]
+CORS_ORIGIN_ALLOW_ALL = True
+AUTH_USER_MODEL ='Eemail.Useremail'
+# Application definition
+AUTHENTICATION_BACKENDS = [
+    "graphql_jwt.backends.JSONWebTokenBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+GRAPHQL_JWT={
+    'JWT_EXPIRATION_DELTA':timedelta(minutes=5),
+    'JWT_REFRESH_EXPIRATION_DELTA':timedelta(days=7),
+    "JWT_ALLOW_ARGUMENT": True,}
+
+GRAPHENE={'SCHEMA':'core.schema.schema',
+"SCHEMA_OUTPUT":'data/myschema.json',
+   "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",]
+        }
+
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+#ROOT_URLCONF='.urls'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER='magrayhinafayazzzz@gmail.com'
+EMAIL_HOST_PASSWORD='jhwgycbayfwjszdy'
+EMAIL_USE_TLS = True
+SENDGRID_API_KEY ='your sendgrid api key i.e SG.XXXXXXX'
+DOMAIN = "http://127.0.0.1:8000"
+AUTH_USER_MODEL="Eemail.Useremail" 
